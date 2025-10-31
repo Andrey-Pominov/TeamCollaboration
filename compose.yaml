@@ -1,0 +1,7 @@
+﻿services:
+  teamcollaboration:
+    image: teamcollaboration
+    build:
+      context: .
+      dockerfile: Dockerfile
+
