@@ -8,9 +8,9 @@ namespace TeamCollaboration.Application.Mapping;
 /// </summary>
 public static class TaskMappingExtensions
 {
-    public static TaskDto ToDto(this TaskItem task)
+    public static TaskItemDto ToDto(this TaskItem task)
     {
-        return new TaskDto
+        return new TaskItemDto
         {
             Id = task.Id,
             Title = task.Title,
