@@ -16,13 +16,3 @@ riderModule.iml
 *.aps
 Thumbs.db
 Desktop.ini
-*.Development.json
-*.Production.json
-*.Development.env
-*.Production.env
-*.Development.env.example
-*.Production.env.example
-*.Development.env.example.txt
-*.Production.env.example.txt
-*.Development.env.example.txt.example
-*.Production.env.example.txt.example
