@@ -7,4 +7,9 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\TeamCollaboration.Application\TeamCollaboration.Application.csproj" />
+        <ProjectReference Include="..\TeamCollaboration.Infrastructure\TeamCollaboration.Infrastructure.csproj" />
+    </ItemGroup>
+
 </Project>

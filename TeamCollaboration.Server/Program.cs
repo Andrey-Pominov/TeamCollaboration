@@ -1,10 +1,17 @@
-using TeamCollaboration.Components;
+using TeamCollaboration.Application.DependencyInjection;
+using TeamCollaboration.Application.RealTime;
+using TeamCollaboration.Server.Components;
+using TeamCollaboration.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services
+    .AddApplication()
+    .AddInfrastructure();
 
 var app = builder.Build();
 
@@ -24,5 +31,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapHub<KanbanHub>(KanbanHub.HubPath);
 
 app.Run();

@@ -1,0 +1,42 @@
+using Microsoft.EntityFrameworkCore;
+using TeamCollaboration.Domain.Entities;
+
+namespace TeamCollaboration.Infrastructure.Persistence;
+
+/// <summary>
+/// Entity Framework Core context that persists domain entities.
+/// </summary>
+public class TeamCollaborationDbContext(DbContextOptions<TeamCollaborationDbContext> options) : DbContext(options)
+{
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
+
+    public DbSet<BoardColumn> Columns => Set<BoardColumn>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<TaskItem>(builder =>
+        {
+            builder.ToTable("Tasks");
+            builder.HasKey(t => t.Id);
+            builder.Property(t => t.Title).IsRequired().HasMaxLength(200);
+            builder.Property(t => t.Description).HasMaxLength(2000);
+            builder.Property(t => t.Assignee).HasMaxLength(200);
+            builder.Property(t => t.BoardId).IsRequired();
+            builder.Property(t => t.SortOrder).HasDefaultValue(0);
+            builder.HasIndex(t => new { t.BoardId, t.BoardColumnId, t.SortOrder });
+        });
+
+        modelBuilder.Entity<BoardColumn>(builder =>
+        {
+            builder.ToTable("Columns");
+            builder.HasKey(c => c.Id);
+            builder.Property(c => c.Name).IsRequired().HasMaxLength(100);
+            builder.Property(c => c.Description).HasMaxLength(500);
+            builder.Property(c => c.BoardId).IsRequired();
+            builder.Property(c => c.SortOrder).HasDefaultValue(0);
+            builder.HasIndex(c => new { c.BoardId, c.SortOrder }).IsUnique();
+        });
+    }
+}
