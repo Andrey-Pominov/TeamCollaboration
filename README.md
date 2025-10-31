@@ -14,6 +14,14 @@ This Blazor Server project showcases a real-time team collaboration experience s
 - **Clean Architecture:** Keeps the codebase maintainable with clear separation between UI, business rules, and persistence.
 - **Background Services:** Facilitates scheduled or long-running tasks that support the real-time experience.
 
+## Solution Structure
+| Project | Responsibility | Key Contents |
+| --- | --- | --- |
+| `TeamCollaboration.Domain` | 🧠 The Core – holds the business rules. | Entities (`TaskItem`, `BoardColumn`), enums, repository interfaces (`ITaskRepository`). |
+| `TeamCollaboration.Application` | ⚙️ The Workflow – orchestrates use cases. | Services (`TaskService`), DTOs, validators, SignalR hub (`KanbanHub`). |
+| `TeamCollaboration.Infrastructure` | 🔌 The How – connects to external systems. | EF Core `TeamCollaborationDbContext`, repository implementations (`TaskRepository`), identity integrations (future). |
+| `TeamCollaboration.Server` | 🖥️ The UI – Blazor Server entry point. | Razor components, `Program.cs` (DI, middleware), static assets in `wwwroot`. |
+
 ## Project Goals
 - Demonstrate modern collaboration features that users expect from productivity tools.
 - Provide a reference implementation for structuring real-time Blazor applications.
