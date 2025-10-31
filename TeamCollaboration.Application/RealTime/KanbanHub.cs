@@ -1,28 +1,29 @@
+using System.Linq;
 using Microsoft.AspNetCore.SignalR;
 using TeamCollaboration.Application.DTOs;
+using TeamCollaboration.Application.Services;
 
 namespace TeamCollaboration.Application.RealTime;
 
 /// <summary>
-/// SignalR hub responsible for broadcasting task updates to connected clients.
+/// SignalR hub responsible for coordinating task updates with connected clients.
 /// </summary>
-public class KanbanHub : Hub
+public class KanbanHub(ITaskService taskService) : Hub
 {
     public const string HubPath = "/hubs/kanban";
 
-    public async Task BroadcastTaskCreated(TaskDto task)
+    /// <summary>
+    /// Handles client requests to move a task between columns.
+    /// </summary>
+    /// <exception cref="HubException">Thrown when the move fails validation or persistence.</exception>
+    public async Task MoveTask(MoveTaskRequest request)
     {
-        await Clients.Others.SendAsync("TaskCreated", task);
-    }
-
-    public async Task BroadcastTaskUpdated(TaskDto task)
-    {
-        await Clients.Others.SendAsync("TaskUpdated", task);
-    }
-
-    public async Task BroadcastTaskDeleted(Guid taskId)
-    {
-        await Clients.Others.SendAsync("TaskDeleted", taskId);
+        var (success, errors) = await taskService.MoveTaskAsync(request, Context.ConnectionAborted);
+        if (!success)
+        {
+            var message = errors.FirstOrDefault()?.ErrorMessage ?? "Unable to move task.";
+            throw new HubException(message);
+        }
     }
 }
 

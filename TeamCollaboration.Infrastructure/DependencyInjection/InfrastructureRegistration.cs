@@ -15,7 +15,7 @@ public static class InfrastructureRegistration
         this IServiceCollection services,
         Action<DbContextOptionsBuilder>? configureDbContext = null)
     {
-        services.AddDbContext<TeamCollaborationDbContext>(options =>
+        services.AddDbContext<ApplicationDbContext>(options =>
         {
             if (configureDbContext is not null)
             {
@@ -28,6 +28,7 @@ public static class InfrastructureRegistration
         });
 
         services.AddScoped<ITaskRepository, TaskRepository>();
+        services.AddScoped<IBoardRepository, BoardRepository>();
 
         return services;
     }

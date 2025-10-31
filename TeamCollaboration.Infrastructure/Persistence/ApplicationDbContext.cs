@@ -6,11 +6,13 @@ namespace TeamCollaboration.Infrastructure.Persistence;
 /// <summary>
 /// Entity Framework Core context that persists domain entities.
 /// </summary>
-public class TeamCollaborationDbContext(DbContextOptions<TeamCollaborationDbContext> options) : DbContext(options)
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
 
     public DbSet<BoardColumn> Columns => Set<BoardColumn>();
+
+    public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,5 +40,14 @@ public class TeamCollaborationDbContext(DbContextOptions<TeamCollaborationDbCont
             builder.Property(c => c.SortOrder).HasDefaultValue(0);
             builder.HasIndex(c => new { c.BoardId, c.SortOrder }).IsUnique();
         });
+
+        modelBuilder.Entity<ApplicationUser>(builder =>
+        {
+            builder.ToTable("Users");
+            builder.HasKey(u => u.Id);
+            builder.Property(u => u.Email).IsRequired().HasMaxLength(256);
+            builder.Property(u => u.DisplayName).IsRequired().HasMaxLength(200);
+        });
     }
 }
+

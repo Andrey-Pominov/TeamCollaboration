@@ -19,7 +19,7 @@ This Blazor Server project showcases a real-time team collaboration experience s
 | --- | --- | --- |
 | `TeamCollaboration.Domain` | 🧠 The Core – holds the business rules. | Entities (`TaskItem`, `BoardColumn`), enums, repository interfaces (`ITaskRepository`). |
 | `TeamCollaboration.Application` | ⚙️ The Workflow – orchestrates use cases. | Services (`TaskService`), DTOs, validators, SignalR hub (`KanbanHub`). |
-| `TeamCollaboration.Infrastructure` | 🔌 The How – connects to external systems. | EF Core `TeamCollaborationDbContext`, repository implementations (`TaskRepository`), identity integrations (future). |
+| `TeamCollaboration.Infrastructure` | 🔌 The How – connects to external systems. | EF Core `ApplicationDbContext`, repository implementations (`TaskRepository`), identity integrations (future). |
 | `TeamCollaboration.Server` | 🖥️ The UI – Blazor Server entry point. | Razor components, `Program.cs` (DI, middleware), static assets in `wwwroot`. |
 
 ## Project Goals

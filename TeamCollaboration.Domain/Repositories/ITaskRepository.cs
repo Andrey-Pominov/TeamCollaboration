@@ -16,5 +16,13 @@ public interface ITaskRepository
     Task UpdateAsync(TaskItem task, CancellationToken cancellationToken = default);
 
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<bool> UpdateTaskPositionAsync(
+        Guid taskId,
+        Guid boardId,
+        Guid newColumnId,
+        int newOrder,
+        TeamCollaboration.Domain.Enums.TaskStatus targetStatus,
+        CancellationToken cancellationToken = default);
 }
 

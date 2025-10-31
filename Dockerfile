@@ -9,7 +9,7 @@ WORKDIR /src
 
 COPY ["TeamCollaboration.sln", "./"]
 COPY ["TeamCollaboration.Server/TeamCollaboration.Server.csproj", "TeamCollaboration.Server/"]
-COPY ["TeamCollaboration.Application/TaeamCollaboration.Application.csproj", "TeamCollaboration.Application/"]
+COPY ["TeamCollaboration.Application/TeamCollaboration.Application.csproj", "TeamCollaboration.Application/"]
 COPY ["TeamCollaboration.Infrastructure/TeamCollaboration.Infrastructure.csproj", "TeamCollaboration.Infrastructure/"]
 COPY ["TeamCollaboration.Domain/TeamCollaboration.Domain.csproj", "TeamCollaboration.Domain/"]
 

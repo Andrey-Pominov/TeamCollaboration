@@ -10,7 +10,7 @@ public static class ApplicationRegistration
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddScoped<TaskService>();
+        services.AddScoped<ITaskService, TaskService>();
         services.AddSignalR();
 
         return services;
