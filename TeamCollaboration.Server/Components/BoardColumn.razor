@@ -1,0 +1,93 @@
+@using TeamCollaboration.Application.DTOs
+@inject IJSRuntime JSRuntime
+
+<div class="kanban-column @(isDragOver ? "drag-over" : "")" 
+     @ondrop="HandleDrop" 
+     @ondragover="HandleDragOver"
+     @ondragenter="HandleDragEnter"
+     @ondragleave="HandleDragLeave">
+    <div class="kanban-column-header">
+        <h3>@Column.Name</h3>
+        <span class="badge bg-secondary">@Tasks.Count</span>
+    </div>
+    <div class="kanban-column-body">
+        @foreach (var task in Tasks)
+        {
+            <TaskCard Task="@task" OnClick="HandleTaskClick" />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public required BoardColumnDto Column { get; set; }
+
+    [Parameter]
+    public required List<TaskItemDto> Tasks { get; set; }
+
+    [Parameter]
+    public EventCallback<(Guid taskId, Guid targetColumnId)> OnTaskDropped { get; set; }
+
+    [Parameter]
+    public EventCallback<TaskItemDto> OnTaskClick { get; set; }
+
+    private bool isDragOver = false;
+
+    private void HandleDragEnter(DragEventArgs e)
+    {
+        isDragOver = true;
+    }
+
+    private void HandleDragLeave(DragEventArgs e)
+    {
+        isDragOver = false;
+    }
+
+    private void HandleDragOver(DragEventArgs e)
+    {
+        // Allow drop
+    }
+
+    private async Task HandleDrop(DragEventArgs e)
+    {
+        isDragOver = false;
+
+        try
+        {
+            // Get data from drop event using JS interop
+            var taskIdString = await JSRuntime.InvokeAsync<string>("eval", 
+                "event.dataTransfer.getData('text/plain')");
+            if (!string.IsNullOrEmpty(taskIdString) && Guid.TryParse(taskIdString, out var taskId))
+            {
+                await OnTaskDropped.InvokeAsync((taskId, Column.Id));
+            }
+        }
+        catch
+        {
+            // Handle error silently - fallback to window variable
+            try
+            {
+                var taskIdString = await JSRuntime.InvokeAsync<string>("eval", 
+                    "window.draggedTaskId || ''");
+                if (!string.IsNullOrEmpty(taskIdString) && Guid.TryParse(taskIdString, out var taskId))
+                {
+                    await OnTaskDropped.InvokeAsync((taskId, Column.Id));
+                    await JSRuntime.InvokeVoidAsync("eval", "window.draggedTaskId = ''");
+                }
+            }
+            catch
+            {
+                // Silently fail
+            }
+        }
+    }
+
+    private async Task HandleTaskClick(TaskItemDto task)
+    {
+        if (OnTaskClick.HasDelegate)
+        {
+            await OnTaskClick.InvokeAsync(task);
+        }
+    }
+}
+

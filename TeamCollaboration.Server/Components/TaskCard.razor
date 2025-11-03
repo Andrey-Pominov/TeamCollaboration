@@ -1,0 +1,73 @@
+@using TeamCollaboration.Application.DTOs
+@using DomainTaskStatus = TeamCollaboration.Domain.Enums.TaskStatus
+@inject IJSRuntime JSRuntime
+
+<div class="task-card" 
+     draggable="true"
+     data-task-id="@Task.Id"
+     @ondragstart="HandleDragStart"
+     @ondragend="HandleDragEnd"
+     @onclick="HandleClick"
+     style="@GetCardStyle()">
+    <div class="task-card-header">
+        <h5 class="task-title">@Task.Title</h5>
+        @if (Task.DueAtUtc.HasValue)
+        {
+            var isOverdue = Task.DueAtUtc.Value < DateTime.UtcNow && Task.Status != DomainTaskStatus.Done;
+            <span class="badge @(isOverdue ? "bg-danger" : "bg-info")">
+                @Task.DueAtUtc.Value.ToString("MM/dd")
+            </span>
+        }
+    </div>
+    
+    @if (!string.IsNullOrWhiteSpace(Task.Description))
+    {
+        <p class="task-description">@Task.Description</p>
+    }
+    
+    <div class="task-card-footer">
+        @if (!string.IsNullOrWhiteSpace(Task.Assignee))
+        {
+            <span class="task-assignee">
+                <span class="oi oi-person"></span> @Task.Assignee
+            </span>
+        }
+        <span class="task-id">#@Task.Id.ToString()[..8]</span>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public required TaskItemDto Task { get; set; }
+
+    [Parameter]
+    public EventCallback<TaskItemDto> OnClick { get; set; }
+
+    private bool isDragging = false;
+
+    private string GetCardStyle()
+    {
+        return isDragging ? "opacity: 0.5;" : "";
+    }
+
+    private void HandleDragStart(DragEventArgs e)
+    {
+        isDragging = true;
+        // Store task ID in window for drop handler (Blazor Server workaround)
+        _ = JSRuntime.InvokeVoidAsync("eval", $"window.draggedTaskId = '{Task.Id}'");
+    }
+
+    private void HandleDragEnd(DragEventArgs e)
+    {
+        isDragging = false;
+    }
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync(Task);
+        }
+    }
+}
+
