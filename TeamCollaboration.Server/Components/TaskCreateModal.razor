@@ -1,0 +1,122 @@
+@using TeamCollaboration.Application.DTOs
+@using DomainTaskStatus = TeamCollaboration.Domain.Enums.TaskStatus
+
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Task</h5>
+                <button type="button" class="btn-close" @onclick="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@taskModel" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <div class="mb-3">
+                        <label class="form-label">Title *</label>
+                        <InputText @bind-Value="taskModel.Title" class="form-control" />
+                        <ValidationMessage For="@(() => taskModel.Title)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <InputTextArea @bind-Value="taskModel.Description" class="form-control" rows="3" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Column</label>
+                        <InputSelect @bind-Value="selectedColumnId" class="form-select">
+                            @foreach (var column in availableColumns)
+                            {
+                                <option value="@column.Id">@column.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Assignee</label>
+                        <InputText @bind-Value="taskModel.Assignee" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Date</label>
+                        <InputDate @bind-Value="dueDate" class="form-control" />
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" @onclick="Close">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Task</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public required EventCallback<TaskItemDto> OnTaskCreated { get; set; }
+
+    [Parameter]
+    public required EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public required Guid BoardId { get; set; }
+
+    [Parameter]
+    public List<BoardColumnDto>? AvailableColumns { get; set; }
+
+    private class TaskModel
+    {
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? Assignee { get; set; }
+    }
+
+    private TaskModel taskModel = new();
+    private Guid selectedColumnId;
+    private DateTime? dueDate;
+    private List<BoardColumnDto> availableColumns = new();
+
+    protected override void OnParametersSet()
+    {
+        if (AvailableColumns != null && AvailableColumns.Any())
+        {
+            availableColumns = AvailableColumns;
+            selectedColumnId = AvailableColumns.First().Id;
+        }
+        else
+        {
+            // Default columns
+            availableColumns = new List<BoardColumnDto>
+            {
+                new() { Id = Guid.NewGuid(), Name = "To Do", SortOrder = 0, BoardId = BoardId },
+                new() { Id = Guid.NewGuid(), Name = "In Progress", SortOrder = 1, BoardId = BoardId },
+                new() { Id = Guid.NewGuid(), Name = "Done", SortOrder = 2, BoardId = BoardId }
+            };
+            selectedColumnId = availableColumns.First().Id;
+        }
+
+        taskModel = new TaskModel();
+        selectedColumnId = availableColumns.First().Id;
+    }
+
+    private async Task HandleSubmit()
+    {
+        var newTask = new TaskItemDto
+        {
+            Id = Guid.NewGuid(),
+            Title = taskModel.Title,
+            Description = taskModel.Description,
+            BoardId = BoardId,
+            BoardColumnId = selectedColumnId,
+            Status = DomainTaskStatus.ToDo,
+            SortOrder = 0,
+            Assignee = taskModel.Assignee,
+            CreatedAtUtc = DateTime.UtcNow,
+            DueAtUtc = dueDate?.ToUniversalTime()
+        };
+
+        await OnTaskCreated.InvokeAsync(newTask);
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+}
+

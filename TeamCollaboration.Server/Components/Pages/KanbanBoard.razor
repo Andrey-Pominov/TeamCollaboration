@@ -1,0 +1,233 @@
+@page "/kanban"
+@page "/kanban/{BoardId:guid}"
+@rendermode InteractiveServer
+@using DomainTaskStatus = TeamCollaboration.Domain.Enums.TaskStatus
+@inject ITaskService TaskService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<PageTitle>Kanban Board</PageTitle>
+
+<div class="kanban-container">
+    <div class="kanban-header mb-4">
+        <h1>Team Collaboration Board</h1>
+        <button class="btn btn-primary" @onclick="ShowCreateTaskModal">
+            <span class="oi oi-plus"></span> New Task
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (columns.Count == 0)
+    {
+        <div class="alert alert-info">
+            <h4>No columns available</h4>
+            <p>Please create board columns to start organizing tasks.</p>
+        </div>
+    }
+    else
+    {
+        <div class="kanban-columns d-flex gap-3">
+            @foreach (var column in columns)
+            {
+                <BoardColumn Column="@column" 
+                             Tasks="@GetTasksForColumn(column.Id)" 
+                             OnTaskDropped="@HandleTaskDrop"
+                             OnTaskClick="@HandleTaskClick" />
+            }
+        </div>
+    }
+
+    @if (showCreateModal)
+    {
+        <TaskCreateModal OnTaskCreated="@HandleTaskCreated" 
+                         OnClose="@CloseModal" 
+                         BoardId="@currentBoardId"
+                         AvailableColumns="@columns" />
+    }
+</div>
+
+@code {
+    private Guid currentBoardId = Guid.NewGuid();
+    private HubConnection? hubConnection;
+    private bool isLoading = true;
+    private bool showCreateModal = false;
+    private List<TaskItemDto> tasks = new();
+    private List<BoardColumnDto> columns = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InitializeBoardAsync();
+        await ConnectToSignalR();
+    }
+
+    private async Task InitializeBoardAsync()
+    {
+        isLoading = true;
+        
+        // Initialize default columns if none exist
+        columns = new List<BoardColumnDto>
+        {
+            new() { Id = Guid.NewGuid(), Name = "To Do", SortOrder = 0, BoardId = currentBoardId },
+            new() { Id = Guid.NewGuid(), Name = "In Progress", SortOrder = 1, BoardId = currentBoardId },
+            new() { Id = Guid.NewGuid(), Name = "Done", SortOrder = 2, BoardId = currentBoardId }
+        };
+
+        tasks = (await TaskService.GetByBoardAsync(currentBoardId)).ToList();
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task ConnectToSignalR()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri(KanbanHub.HubPath))
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On<TaskItemDto>("ReceiveTaskCreated", async (task) =>
+        {
+            if (task.BoardId == currentBoardId)
+            {
+                tasks.Add(task);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+
+        hubConnection.On<Guid, Guid, Guid, int, DomainTaskStatus>("ReceiveTaskMoved", async (taskId, boardId, columnId, order, status) =>
+        {
+            if (boardId == currentBoardId)
+            {
+                var task = tasks.FirstOrDefault(t => t.Id == taskId);
+                if (task != null)
+                {
+                    task = await TaskService.GetAsync(taskId);
+                    if (task != null)
+                    {
+                        var index = tasks.FindIndex(t => t.Id == taskId);
+                        if (index >= 0)
+                        {
+                            tasks[index] = task;
+                            await InvokeAsync(StateHasChanged);
+                        }
+                    }
+                }
+            }
+        });
+
+        hubConnection.On<TaskItemDto>("ReceiveTaskUpdated", async (task) =>
+        {
+            if (task.BoardId == currentBoardId)
+            {
+                var index = tasks.FindIndex(t => t.Id == task.Id);
+                if (index >= 0)
+                {
+                    tasks[index] = task;
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+        });
+
+        hubConnection.On<Guid>("ReceiveTaskDeleted", async (taskId) =>
+        {
+            tasks.RemoveAll(t => t.Id == taskId);
+            await InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    private List<TaskItemDto> GetTasksForColumn(Guid columnId)
+    {
+        return tasks
+            .Where(t => t.BoardColumnId == columnId)
+            .OrderBy(t => t.SortOrder)
+            .ThenBy(t => t.CreatedAtUtc)
+            .ToList();
+    }
+
+    private async Task HandleTaskDrop((Guid taskId, Guid targetColumnId) dropData)
+    {
+        var (taskId, targetColumnId) = dropData;
+        var task = tasks.FirstOrDefault(t => t.Id == taskId);
+        if (task == null) return;
+
+        var targetColumn = columns.FirstOrDefault(c => c.Id == targetColumnId);
+        if (targetColumn == null) return;
+
+        var targetStatus = targetColumn.Name switch
+        {
+            "To Do" => DomainTaskStatus.ToDo,
+            "In Progress" => DomainTaskStatus.InProgress,
+            "Done" => DomainTaskStatus.Done,
+            _ => DomainTaskStatus.ToDo
+        };
+
+        var existingTasksInColumn = GetTasksForColumn(targetColumnId);
+        var newOrder = existingTasksInColumn.Count;
+
+        var request = new MoveTaskRequest
+        {
+            TaskId = taskId,
+            BoardId = currentBoardId,
+            TargetColumnId = targetColumnId,
+            TargetOrder = newOrder,
+            TargetStatus = targetStatus
+        };
+
+        var (success, errors) = await TaskService.MoveTaskAsync(request);
+        if (!success)
+        {
+            // Handle error - could show a toast notification
+            Console.WriteLine($"Failed to move task: {string.Join(", ", errors.Select(e => e.ErrorMessage))}");
+        }
+    }
+
+    private void HandleTaskClick(TaskItemDto task)
+    {
+        // Could open an edit modal or navigate to task detail page
+    }
+
+    private void ShowCreateTaskModal()
+    {
+        showCreateModal = true;
+    }
+
+    private async Task CloseModal()
+    {
+        showCreateModal = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleTaskCreated(TaskItemDto newTaskRequest)
+    {
+        var (createdTask, errors) = await TaskService.CreateAsync(newTaskRequest);
+        if (createdTask != null)
+        {
+            tasks.Add(createdTask);
+            showCreateModal = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            // Handle validation errors
+            Console.WriteLine($"Failed to create task: {string.Join(", ", errors.Select(e => e.ErrorMessage))}");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
+
