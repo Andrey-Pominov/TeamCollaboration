@@ -2,6 +2,7 @@ using TeamCollaboration.Application.DependencyInjection;
 using TeamCollaboration.Application.RealTime;
 using TeamCollaboration.Server.Components;
 using TeamCollaboration.Infrastructure.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,9 +10,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+var connectionString = builder.Configuration.GetConnectionString("Postgres");
+
 builder.Services
     .AddApplication()
-    .AddInfrastructure();
+    .AddInfrastructure(options =>
+    {
+        if (!string.IsNullOrWhiteSpace(connectionString))
+        {
+            options.UseNpgsql(connectionString);
+        }
+    });
 
 var app = builder.Build();
 
