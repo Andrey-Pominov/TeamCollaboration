@@ -3,9 +3,6 @@ using TeamCollaboration.Application.DTOs;
 
 namespace TeamCollaboration.Application.Validation;
 
-/// <summary>
-/// Lightweight validation rules that can be applied before command execution.
-/// </summary>
 public static class TaskItemValidator
 {
     public static IReadOnlyCollection<ValidationResult> ValidateForCreate(TaskItemDto candidate)

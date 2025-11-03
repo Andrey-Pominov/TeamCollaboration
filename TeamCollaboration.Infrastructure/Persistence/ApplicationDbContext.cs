@@ -3,9 +3,6 @@ using TeamCollaboration.Domain.Entities;
 
 namespace TeamCollaboration.Infrastructure.Persistence;
 
-/// <summary>
-/// Entity Framework Core context that persists domain entities.
-/// </summary>
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
     public DbSet<TaskItem> Tasks => Set<TaskItem>();

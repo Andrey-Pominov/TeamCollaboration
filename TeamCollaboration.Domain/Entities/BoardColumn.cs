@@ -1,8 +1,5 @@
 namespace TeamCollaboration.Domain.Entities;
 
-/// <summary>
-/// Represents a single column on a kanban board (e.g. To Do, In Progress).
-/// </summary>
 public class BoardColumn
 {
     public BoardColumn(Guid boardId, string name, int sortOrder)
@@ -19,10 +16,7 @@ public class BoardColumn
         CreatedAtUtc = DateTime.UtcNow;
     }
 
-    private BoardColumn()
-    {
-        // Reserved for EF Core.
-    }
+    private BoardColumn() { }
 
     public Guid Id { get; private set; }
 

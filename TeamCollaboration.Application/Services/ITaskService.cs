@@ -4,9 +4,6 @@ using TaskStatus = TeamCollaboration.Domain.Enums.TaskStatus;
 
 namespace TeamCollaboration.Application.Services;
 
-/// <summary>
-/// Exposes task-related operations to the presentation layer.
-/// </summary>
 public interface ITaskService
 {
     Task<TaskItemDto?> GetAsync(Guid id, CancellationToken cancellationToken = default);

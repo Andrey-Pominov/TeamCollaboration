@@ -2,9 +2,6 @@ using TeamCollaboration.Domain.Entities;
 
 namespace TeamCollaboration.Domain.Repositories;
 
-/// <summary>
-/// Defines data access operations for board-level aggregates.
-/// </summary>
 public interface IBoardRepository
 {
     Task<IReadOnlyCollection<BoardColumn>> GetColumnsAsync(Guid boardId, CancellationToken cancellationToken = default);
