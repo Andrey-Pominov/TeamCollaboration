@@ -6,9 +6,6 @@ using TeamCollaboration.Infrastructure.Persistence;
 
 namespace TeamCollaboration.Infrastructure.Repositories;
 
-/// <summary>
-/// Entity Framework Core implementation of <see cref="IBoardRepository"/>.
-/// </summary>
 public class BoardRepository(ApplicationDbContext dbContext) : IBoardRepository
 {
     public async Task AddColumnAsync(BoardColumn column, CancellationToken cancellationToken = default)

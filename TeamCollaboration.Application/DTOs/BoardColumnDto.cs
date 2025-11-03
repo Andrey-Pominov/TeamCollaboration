@@ -1,8 +1,5 @@
 namespace TeamCollaboration.Application.DTOs;
 
-/// <summary>
-/// Transport-friendly representation of a board column.
-/// </summary>
 public sealed class BoardColumnDto
 {
     public Guid Id { get; init; }

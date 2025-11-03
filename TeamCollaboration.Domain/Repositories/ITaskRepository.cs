@@ -2,9 +2,6 @@ using TeamCollaboration.Domain.Entities;
 
 namespace TeamCollaboration.Domain.Repositories;
 
-/// <summary>
-/// Contract for persistence operations that manage <see cref="TaskItem"/> aggregates.
-/// </summary>
 public interface ITaskRepository
 {
     Task<TaskItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

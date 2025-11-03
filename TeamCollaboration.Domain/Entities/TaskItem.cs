@@ -2,9 +2,6 @@ using DomainTaskStatus = TeamCollaboration.Domain.Enums.TaskStatus;
 
 namespace TeamCollaboration.Domain.Entities;
 
-/// <summary>
-/// Aggregates the business rules for a single task tracked on the collaboration board.
-/// </summary>
 public class TaskItem
 {
     public TaskItem(Guid boardId, Guid boardColumnId, string title)
@@ -22,10 +19,7 @@ public class TaskItem
         CreatedAtUtc = DateTime.UtcNow;
     }
 
-    private TaskItem()
-    {
-        // EF Core constructor
-    }
+    private TaskItem() { }
 
     public Guid Id { get; private set; }
 

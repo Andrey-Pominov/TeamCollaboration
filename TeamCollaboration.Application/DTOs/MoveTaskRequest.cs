@@ -3,9 +3,7 @@ using TaskStatus = TeamCollaboration.Domain.Enums.TaskStatus;
 
 namespace TeamCollaboration.Application.DTOs;
 
-/// <summary>
-/// Represents the data needed to move a task between columns in the UI.
-/// </summary>
+
 public sealed class MoveTaskRequest
 {
     [Required]

@@ -6,9 +6,7 @@ using TeamCollaboration.Infrastructure.Persistence;
 
 namespace TeamCollaboration.Infrastructure.Repositories;
 
-/// <summary>
-/// Entity Framework Core implementation of <see cref="ITaskRepository"/>.
-/// </summary>
+
 public class TaskRepository(ApplicationDbContext dbContext) : ITaskRepository
 {
     public async Task AddAsync(TaskItem task, CancellationToken cancellationToken = default)

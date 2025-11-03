@@ -1,8 +1,5 @@
 namespace TeamCollaboration.Domain.Entities;
 
-/// <summary>
-/// Represents an authenticated user within the collaboration system.
-/// </summary>
 public class ApplicationUser
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -13,10 +10,7 @@ public class ApplicationUser
 
     public bool IsActive { get; private set; } = true;
 
-    private ApplicationUser()
-    {
-        // Required by ORM serializers.
-    }
+    private ApplicationUser() { }
 
     public ApplicationUser(string email, string displayName)
     {
@@ -44,4 +38,3 @@ public class ApplicationUser
         IsActive = true;
     }
 }
-

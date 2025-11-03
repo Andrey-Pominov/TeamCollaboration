@@ -3,9 +3,6 @@ using TeamCollaboration.Domain.Entities;
 
 namespace TeamCollaboration.Application.Mapping;
 
-/// <summary>
-/// Provides conversions between domain entities and DTOs.
-/// </summary>
 public static class TaskMappingExtensions
 {
     public static TaskItemDto ToDto(this TaskItem task)

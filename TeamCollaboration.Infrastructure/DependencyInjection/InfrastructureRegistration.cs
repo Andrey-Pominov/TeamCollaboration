@@ -6,9 +6,6 @@ using TeamCollaboration.Infrastructure.Repositories;
 
 namespace TeamCollaboration.Infrastructure.DependencyInjection;
 
-/// <summary>
-/// Provides helpers for wiring infrastructure services into the application container.
-/// </summary>
 public static class InfrastructureRegistration
 {
     public static IServiceCollection AddInfrastructure(

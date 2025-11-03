@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using TeamCollaboration.Application.DTOs;
@@ -12,25 +11,12 @@ using DomainTaskStatus = TeamCollaboration.Domain.Enums.TaskStatus;
 
 namespace TeamCollaboration.Application.Services;
 
-/// <summary>
-/// Coordinates task-related use cases between the UI and domain.
-/// </summary>
-public class TaskService : ITaskService
+public class TaskService(
+    ITaskRepository repository,
+    IHubContext<KanbanHub> hubContext,
+    ILogger<TaskService> logger)
+    : ITaskService
 {
-    private readonly ITaskRepository _repository;
-    private readonly IHubContext<KanbanHub> _hubContext;
-    private readonly ILogger<TaskService> _logger;
-
-    public TaskService(
-        ITaskRepository repository,
-        IHubContext<KanbanHub> hubContext,
-        ILogger<TaskService> logger)
-    {
-        _repository = repository;
-        _hubContext = hubContext;
-        _logger = logger;
-    }
-
     public async Task<(TaskItemDto? task, IReadOnlyCollection<ValidationResult> errors)> CreateAsync(TaskItemDto request, CancellationToken cancellationToken = default)
     {
         var errors = TaskItemValidator.ValidateForCreate(request);
@@ -45,39 +31,39 @@ public class TaskService : ITaskService
         var status = Enum.IsDefined(typeof(DomainTaskStatus), request.Status) ? request.Status : DomainTaskStatus.ToDo;
         task.MoveTo(request.BoardColumnId, status, request.SortOrder);
 
-        await _repository.AddAsync(task, cancellationToken);
-        _logger.LogInformation("Created task {TaskId} in column {ColumnId}", task.Id, task.BoardColumnId);
+        await repository.AddAsync(task, cancellationToken);
+        logger.LogInformation("Created task {TaskId} in column {ColumnId}", task.Id, task.BoardColumnId);
 
         var dto = task.ToDto();
-        await _hubContext.Clients.All.SendAsync("ReceiveTaskCreated", dto, cancellationToken);
+        await hubContext.Clients.All.SendAsync("ReceiveTaskCreated", dto, cancellationToken);
 
-        return (dto, Array.Empty<ValidationResult>());
+        return (dto, []);
     }
 
     public async Task<TaskItemDto?> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var task = await _repository.GetByIdAsync(id, cancellationToken);
+        var task = await repository.GetByIdAsync(id, cancellationToken);
         return task?.ToDto();
     }
 
     public async Task<IReadOnlyCollection<TaskItemDto>> GetByBoardAsync(Guid boardId, CancellationToken cancellationToken = default)
     {
-        var items = await _repository.GetByBoardAsync(boardId, cancellationToken);
+        var items = await repository.GetByBoardAsync(boardId, cancellationToken);
         return items.Select(t => t.ToDto()).ToArray();
     }
 
     public async Task<bool> UpdateDetailsAsync(Guid id, string title, string? description, DateTime? dueAtUtc, CancellationToken cancellationToken = default)
     {
-        var task = await _repository.GetByIdAsync(id, cancellationToken);
+        var task = await repository.GetByIdAsync(id, cancellationToken);
         if (task is null)
         {
-            _logger.LogWarning("Attempted to update task {TaskId} but it does not exist", id);
+            logger.LogWarning("Attempted to update task {TaskId} but it does not exist", id);
             return false;
         }
 
         task.UpdateDetails(title, description, dueAtUtc);
-        await _repository.UpdateAsync(task, cancellationToken);
-        await _hubContext.Clients.All.SendAsync("ReceiveTaskUpdated", task.ToDto(), cancellationToken);
+        await repository.UpdateAsync(task, cancellationToken);
+        await hubContext.Clients.All.SendAsync("ReceiveTaskUpdated", task.ToDto(), cancellationToken);
         return true;
     }
 
@@ -89,7 +75,7 @@ public class TaskService : ITaskService
             return (false, errors);
         }
 
-        var success = await _repository.UpdateTaskPositionAsync(
+        var success = await repository.UpdateTaskPositionAsync(
             request.TaskId,
             request.BoardId,
             request.TargetColumnId,
@@ -99,13 +85,13 @@ public class TaskService : ITaskService
 
         if (!success)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 "Attempted to move task {TaskId} but it does not exist or belongs to another board",
                 request.TaskId);
-            return (false, Array.Empty<ValidationResult>());
+            return (false, []);
         }
 
-        await _hubContext.Clients.All.SendAsync(
+        await hubContext.Clients.All.SendAsync(
             "ReceiveTaskMoved",
             request.TaskId,
             request.BoardId,
@@ -114,28 +100,28 @@ public class TaskService : ITaskService
             request.TargetStatus,
             cancellationToken);
 
-        return (true, Array.Empty<ValidationResult>());
+        return (true, []);
     }
 
     public async Task<bool> UpdateStatusAsync(Guid id, DomainTaskStatus status, CancellationToken cancellationToken = default)
     {
-        var task = await _repository.GetByIdAsync(id, cancellationToken);
+        var task = await repository.GetByIdAsync(id, cancellationToken);
         if (task is null)
         {
-            _logger.LogWarning("Attempted to update status for task {TaskId} but it does not exist", id);
+            logger.LogWarning("Attempted to update status for task {TaskId} but it does not exist", id);
             return false;
         }
 
         task.MoveTo(task.BoardColumnId, status, task.SortOrder);
-        await _repository.UpdateAsync(task, cancellationToken);
-        await _hubContext.Clients.All.SendAsync("ReceiveTaskStatusChanged", task.ToDto(), cancellationToken);
+        await repository.UpdateAsync(task, cancellationToken);
+        await hubContext.Clients.All.SendAsync("ReceiveTaskStatusChanged", task.ToDto(), cancellationToken);
         return true;
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await _repository.DeleteAsync(id, cancellationToken);
-        await _hubContext.Clients.All.SendAsync("ReceiveTaskDeleted", id, cancellationToken);
+        await repository.DeleteAsync(id, cancellationToken);
+        await hubContext.Clients.All.SendAsync("ReceiveTaskDeleted", id, cancellationToken);
     }
 }
 
