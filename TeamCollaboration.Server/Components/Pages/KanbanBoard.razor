@@ -2,6 +2,7 @@
 @page "/kanban/{BoardId:guid}"
 @rendermode InteractiveServer
 @using DomainTaskStatus = TeamCollaboration.Domain.Enums.TaskStatus
+@using TeamCollaboration.Server.Components
 @inject ITaskService TaskService
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -48,6 +49,7 @@
     @if (showCreateModal)
     {
         <TaskCreateModal OnTaskCreated="@HandleTaskCreated" 
+        
                          OnClose="@CloseModal" 
                          BoardId="@currentBoardId"
                          AvailableColumns="@columns" />
@@ -82,18 +84,16 @@
     private async Task InitializeBoardAsync()
     {
         isLoading = true;
-        
-        // Initialize default columns if none exist
-        columns = new List<BoardColumnDto>
-        {
-            new() { Id = Guid.NewGuid(), Name = "To Do", SortOrder = 0, BoardId = currentBoardId },
-            new() { Id = Guid.NewGuid(), Name = "In Progress", SortOrder = 1, BoardId = currentBoardId },
-            new() { Id = Guid.NewGuid(), Name = "Done", SortOrder = 2, BoardId = currentBoardId }
-        };
 
-        tasks = (await TaskService.GetByBoardAsync(currentBoardId)).ToList();
+        tasks = (await GetAllTasksAsync()).ToList();
         isLoading = false;
         StateHasChanged();
+    }
+
+    private async Task<IReadOnlyCollection<TaskItemDto>> GetAllTasksAsync()
+    {
+        // Currently retrieves all tasks for the active board
+        return await TaskService.GetByBoardAsync(currentBoardId);
     }
 
     private async Task ConnectToSignalR()
@@ -228,7 +228,6 @@
         }
         else
         {
-            // Handle validation errors
             Console.WriteLine($"Failed to create task: {string.Join(", ", errors.Select(e => e.ErrorMessage))}");
         }
     }

@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var connectionString = builder.Configuration.GetConnectionString("Postgres");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services
     .AddApplication()

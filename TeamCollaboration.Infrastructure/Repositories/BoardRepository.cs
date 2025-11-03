@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using TeamCollaboration.Domain.Entities;
 using TeamCollaboration.Domain.Repositories;
