@@ -33,7 +33,7 @@ public class TaskItem
 
     public Guid BoardColumnId { get; private set; }
 
-    public BoardColumn? Column { get; private set; }
+    public BoardColumn? Column { get; }
 
     public int SortOrder { get; private set; }
 
