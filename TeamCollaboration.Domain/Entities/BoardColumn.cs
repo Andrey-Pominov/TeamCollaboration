@@ -32,6 +32,8 @@ public class BoardColumn
 
     public DateTime CreatedAtUtc { get; private set; }
 
+    public ICollection<TaskItem> Tasks { get; private set; } = new List<TaskItem>();
+
     public void UpdateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

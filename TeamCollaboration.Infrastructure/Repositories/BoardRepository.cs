@@ -34,7 +34,7 @@ public class BoardRepository(ApplicationDbContext dbContext) : IBoardRepository
     {
         return await dbContext.Columns
             .AsNoTracking()
-            .Where(c => c.BoardId == boardId && !c.IsArchived)
+            .Where(c => c.BoardId == boardId)
             .OrderBy(c => c.SortOrder)
             .ToListAsync(cancellationToken);
     }

@@ -28,7 +28,7 @@ public class TaskService(
         var task = new TaskItem(request.BoardId, request.BoardColumnId, request.Title);
         task.UpdateDetails(request.Title, request.Description, request.DueAtUtc);
         task.AssignTo(request.Assignee);
-        var status = Enum.IsDefined(typeof(DomainTaskStatus), request.Status) ? request.Status : DomainTaskStatus.ToDo;
+        var status = Enum.IsDefined(request.Status) ? request.Status : DomainTaskStatus.ToDo;
         task.MoveTo(request.BoardColumnId, status, request.SortOrder);
 
         await repository.AddAsync(task, cancellationToken);
