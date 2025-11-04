@@ -53,7 +53,6 @@
     private void HandleDragStart(DragEventArgs e)
     {
         isDragging = true;
-        // Store task ID in window for drop handler (Blazor Server workaround)
         _ = JSRuntime.InvokeVoidAsync("eval", $"window.draggedTaskId = '{Task.Id}'");
     }
 

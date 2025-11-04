@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TeamCollaboration.Domain.Entities;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace TeamCollaboration.Infrastructure.Persistence;
 
@@ -25,6 +26,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             builder.Property(t => t.BoardId).IsRequired();
             builder.Property(t => t.SortOrder).HasDefaultValue(0);
             builder.HasIndex(t => new { t.BoardId, t.BoardColumnId, t.SortOrder });
+
+            builder
+                .HasOne(t => t.Column)
+                .WithMany(c => c.Tasks)
+                .HasForeignKey(t => t.BoardColumnId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<BoardColumn>(builder =>

@@ -3,6 +3,7 @@ using TeamCollaboration.Application.RealTime;
 using TeamCollaboration.Server.Components;
 using TeamCollaboration.Infrastructure.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using TeamCollaboration.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,20 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Apply migrations on startup to persist schema
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        db.Database.Migrate();
+    }
+    catch
+    {
+        // If migration fails (e.g., DB unavailable), continue; the in-memory fallback may be in use
+    }
+}
 
 
 app.UseAntiforgery();
